@@ -24,8 +24,8 @@ int main(void){
 	uint16_t usercount;
 	char str[100];
 	uint16_t result;
-	uint8_t kielbasa[8]={245,42,0,0,0,0,42,245};
-	uint8_t dupsko[8] = {245,9,0,0,0,0,9,245};
+	uint8_t asdf1[8]={245,42,0,0,0,0,42,245};
+	uint8_t asdf2[8] = {245,9,0,0,0,0,9,245};
 	
 	MatchFingerprint();
 	
