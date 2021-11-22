@@ -49,6 +49,8 @@ void USART3SendDMAUINT(const uint8_t *str, uint16_t length);
 void USART3_IRQHandler(void);
 void DMA1_Stream3_IRQHandler(void);
 
+void RTCConf(void);
+
 
 
 

@@ -440,7 +440,13 @@ void DMA1_Stream1_IRQHandler(void){
 }
 
 
-
+void RTCConf(void){
+	
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+	RCC->BDCR |= RCC_BDCR_RTCEN;
+	
+	//RTC->
+}
 
 
 

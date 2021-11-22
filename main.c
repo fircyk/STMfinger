@@ -27,11 +27,17 @@ int main(void){
 	uint8_t asdf1[8]={245,42,0,0,0,0,42,245};
 	uint8_t asdf2[8] = {245,9,0,0,0,0,9,245};
 	
-	MatchFingerprint();
+	usercount = GetUserCount();
+	delay_ms(500);
 	
-//	AddUser1ID((uint8_t)usercount + 1);
-	//AddUser2ID((uint8_t)usercount + 1);
-	//AddUser3ID((uint8_t)usercount + 1);
+	//MatchFingerprint();
+	
+	AddUser1ID((uint8_t)usercount + 1);
+	delay_ms(500);
+	AddUser2ID((uint8_t)usercount + 1);
+	delay_ms(500);
+	AddUser3ID((uint8_t)usercount + 1);
+	delay_ms(500);
 	
 	while(1){
 		//
