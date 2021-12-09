@@ -176,6 +176,7 @@ void USART2ConfDMA(void){
 void USART2ReinitDMA(void){
 	
 		DMA1_Stream5 -> CR &= ~DMA_SxCR_EN;
+		DMA1 -> HIFCR |= DMA_HIFCR_CTCIF5;
 		DMA1_Stream5 -> NDTR = (uint16_t)100;
 		DMA1_Stream5 -> CR |= DMA_SxCR_EN;
 	
@@ -209,15 +210,17 @@ void USART2SendDMAUINT(const uint8_t *str, uint16_t length){
 void USART2_IRQHandler(void){
 		
 	if((USART2 -> SR & USART_SR_IDLE) != RESET){
-				uint8_t temp = USART2 -> DR;
-				USART2ReinitDMA();
-		}
-		/*
+			USART2ReinitDMA();		
+			uint8_t temp = USART2 -> DR;
+				
+	}
+		
 		if((USART2 -> SR & USART_SR_TC) != RESET){
 			USART2 -> SR &= ~USART_SR_TC;
+			USART2ReinitDMA();
 			//USART3ReinitDMA();
 		}
-	*/
+	
 }
 
 void DMA1_Stream6_IRQHandler(void){
@@ -328,7 +331,7 @@ void USART3ConfDMA(void)
 			USART3->CR3 |= USART_CR3_DMAT | USART_CR3_DMAR;
 		//usart (receive, transmit) enable
     USART3 -> CR1 |= USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;
-	USART3 -> CR1 |= USART_CR1_IDLEIE | USART_CR1_TCIE;
+	USART3 -> CR1 |= USART_CR1_IDLEIE;
 	NVIC_EnableIRQ(USART3_IRQn);
 	//stream 1 channel 4 usart 3TX, stream3 channel4 usart3TX
 	DMA1_Stream3 -> PAR = (uint32_t)&USART3->DR;
@@ -344,8 +347,8 @@ void USART3ConfDMA(void)
 	DMA1_Stream1 -> M0AR = (uint32_t)DMABufRX;
 	DMA1_Stream1 -> NDTR = (uint16_t)100;
 	DMA1_Stream1 -> CR |= DMA_SxCR_CHSEL_2;
-	DMA1_Stream1 -> CR |= DMA_SxCR_MINC | DMA_SxCR_EN | DMA_SxCR_TCIE;
-	NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+	DMA1_Stream1 -> CR |= DMA_SxCR_MINC | DMA_SxCR_EN;
+	//NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 	
 	
 }
@@ -354,10 +357,12 @@ void USART3ConfDMA(void)
 void USART3ReinitDMA(void){
 	
 		DMA1_Stream1 -> CR &= ~DMA_SxCR_EN;
+		DMA1 -> LIFCR |= DMA_LIFCR_CTCIF1;
 		DMA1_Stream1 -> NDTR = (uint16_t)100;
 		DMA1_Stream1 -> CR |= DMA_SxCR_EN;
 	
 }
+
 void USART3SendUINT(uint8_t* str){
 		while(*str)
         USART3SendChar(*str++);
@@ -393,15 +398,16 @@ void USART3SendDMAUINT(const uint8_t *str, uint16_t length){
 
 void USART3_IRQHandler(void){
 		if((USART3 -> SR & USART_SR_IDLE) != RESET){
-			uint8_t temp = USART3 -> DR;
 			USART3ReinitDMA();
+			uint8_t temp = USART3 -> DR;
+			
 				
 		}
 		
 	
 		if((USART3 -> SR & USART_SR_TC) != RESET){
 			USART3 -> SR &= ~USART_SR_TC;
-			//USART3ReinitDMA();
+			USART3ReinitDMA();
 		}
 	
 }
