@@ -455,11 +455,21 @@ uint16_t MatchFingerprint(void){
 				sprintf(bufff, "%d", BufRead[4]);
 				USART3SendString("\r\n Matched permissionn: ");
 				USART3SendString(bufff);
+			return match;
 		}
 
 }
 	
+uint8_t AutoMatchFingerprint(void){
 	
+	
+
+}
+
+
+void PCCommandAnalysis(void){
+	
+}
 
 
 
