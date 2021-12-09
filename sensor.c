@@ -6,8 +6,12 @@ uint8_t bufferTX[9];
 uint8_t bufferRX[9];
 
 extern volatile uint32_t timeout;
+
 extern volatile uint8_t DMABufRX[100];
 extern volatile uint8_t BufRead[100];
+
+extern volatile uint8_t DMABufTX[100];
+extern volatile uint8_t BufWrite[100];
 
 //communication via USART 
 uint8_t SendReceiveCMD(uint8_t TXByteCount, uint8_t RXByteCount, uint16_t delayMS){
@@ -73,7 +77,7 @@ uint16_t GetUserCount(){
 	
 		uint8_t temp;
 		uint8_t CheckSum=0;
-		char buff[2];
+		char buff[5];
 		bufferTX[0]=CMD_HEAD;
 		bufferTX[1]=CMD_USER_CNT;
 		bufferTX[2]=0;
@@ -232,6 +236,9 @@ uint8_t AddUser1ID(uint8_t ID){
 		}else if(BufRead[4]==ACK_TIMEOUT){
 				USART3SendString("\r\n ADD1 timeout");
 				return ACK_TIMEOUT;
+		}else if(BufRead[4]==ACK_GO_OUT){
+				USART3SendString("\r\n ADD1 go out");
+				return ACK_GO_OUT;
 		}
 		
 }
@@ -344,6 +351,46 @@ uint8_t AddUser2ID(uint8_t ID){
 		}
 		
 }
+
+
+uint8_t AddUserID(uint8_t ID){
+	
+	uint8_t temp;
+	
+	temp = AddUser1ID(ID);
+	if(temp == ACK_SUCCESS){
+			USART3SendString("\r\n ADD1 succ");
+			temp = AddUser2ID(ID);
+			if(temp == ACK_SUCCESS){
+					USART3SendString("\r\n ADD2 succ");
+					temp = AddUser3ID(ID);
+					if(temp == ACK_SUCCESS){
+							USART3SendString("\r\n ADD3 succ");
+					}else{
+							char errbuf[10];
+							sprintf(errbuf, " \t %d", BufRead[4]);
+							USART3SendString("\r\n ADD3 error code");
+							USART3SendString(errbuf);
+							return BufRead[4];
+					}
+			}else{
+					char errbuf[10];
+					sprintf(errbuf, " \t %d", BufRead[4]);
+					USART3SendString("\r\n ADD2 error code");
+					USART3SendString(errbuf);
+					return BufRead[4];
+			}
+	}else{
+			char errbuf[10];
+			sprintf(errbuf, " \t %d", BufRead[4]);
+			USART3SendString("\r\n ADD1 error code");
+			USART3SendString(errbuf);
+			return BufRead[4];
+	}
+
+	
+}
+
 
 uint8_t DeleteAllUsers(void){
 		

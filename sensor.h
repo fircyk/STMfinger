@@ -49,7 +49,7 @@
 #define CMD_FINGER_DETECTED 0x14
 
 uint8_t CountRXCheckSum(void);
-uint8_t AddUser(void);
+uint8_t AddUserID(uint8_t ID);
 uint8_t AddUser1(void);
 uint8_t AddUser1ID(uint8_t ID);
 uint8_t AddUser2ID(uint8_t ID);
