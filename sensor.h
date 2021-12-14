@@ -59,7 +59,8 @@ uint8_t SendReceiveCMD(uint8_t TXByteCount, uint8_t RXByteCount, uint16_t delay)
 uint8_t DeleteAllUsers(void);
 uint8_t DeleteUser(uint16_t ID);
 uint16_t MatchFingerprint(void);
-uint8_t AutoMatchFingerprint(void);
+void ConfAutoMode(void);
+void AutoMode(void);
 
 
 void PCCommandAnalysis(void);

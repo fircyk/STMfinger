@@ -36,7 +36,7 @@ void USART2SendDMAUINT(const uint8_t *str, uint16_t length);
 
 void USART2_IRQHandler(void);
 void DMA1_Stream6_IRQHandler(void);
-void DMA1_Stream5_IRQHandler(void);
+//void DMA1_Stream5_IRQHandler(void);
 
 void USART3Conf(void);
 void USART3SendChar(char c);
@@ -52,9 +52,11 @@ void USART3SendDMAUINT(const uint8_t *str, uint16_t length);
 
 void USART3_IRQHandler(void);
 void DMA1_Stream3_IRQHandler(void);
-void DMA1_Stream1_IRQHandler(void);
+//void DMA1_Stream1_IRQHandler(void);
 
-void RTCConf(void);
+void ZeroDMABufRX(void);
+
+
 
 
 

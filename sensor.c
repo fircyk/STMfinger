@@ -13,52 +13,9 @@ extern volatile uint8_t BufRead[100];
 extern volatile uint8_t DMABufTX[100];
 extern volatile uint8_t BufWrite[100];
 
-//communication via USART 
-uint8_t SendReceiveCMD(uint8_t TXByteCount, uint8_t RXByteCount, uint16_t delayMS){
-
-//flooding the buffer with unused values
-	for(int i=0; i<9; i++){
-		bufferRX[i]=0xC1;
-	}
-	USART3SendString("tu jestem1");
-	uint8_t CheckSum = 0;
-	USART2SendChar(CMD_HEAD);
-	
-	//sending the buffer and calculating checksum
-	for(int i = 0; i < TXByteCount; i++){
-		USART2SendChar(bufferTX[i]);
-		CheckSum ^= bufferTX[i];
-		USART3SendString("tu jestem2");
-	}
-
-	USART2SendChar(CheckSum);
-	USART2SendChar(CMD_TAIL);
-	USART3SendString("tu jestem3");
-	
-	//delay_ms(delayMS);
-	timeout = 0;
-	while(timeout < delayMS){;}
-	
-	//reception of data below
-	USART2GetBufferRX(RXByteCount, bufferRX);
-	
-	if(bufferRX[0] != CMD_HEAD) return ACK_FAIL;
-	if(bufferTX[RXByteCount-1] != CMD_TAIL) return ACK_FAIL;
-	if(bufferRX[1] != bufferTX[0]) return ACK_FAIL;
-
-	for(int j = 1; j < RXByteCount-1; j++){
-		CheckSum ^= bufferRX[j];
-		USART3SendString("tu jestem 4");
-	}
-	
-	if(CheckSum!=0){ 
-		USART3SendString("tu jestem fail");
-		return ACK_FAIL;
-		
-	}
-	USART3SendString("tu jestem succ");
-	return ACK_SUCCESS;
-}
+volatile uint16_t match;
+volatile uint16_t UserCount;
+volatile bool SleepFlag;
 
 uint8_t CountRXCheckSum(void){
 		char buf[2];
@@ -77,6 +34,9 @@ uint16_t GetUserCount(){
 	
 		uint8_t temp;
 		uint8_t CheckSum=0;
+	
+		ZeroDMABufRX();
+	
 		char buff[5];
 		bufferTX[0]=CMD_HEAD;
 		bufferTX[1]=CMD_USER_CNT;
@@ -191,6 +151,7 @@ uint8_t AddUser1ID(uint8_t ID){
 		//uint16_t temp;
 		uint8_t CheckSum=0;
 	
+		ZeroDMABufRX();
 		//temp = GetUserCount();
 		//temp = temp+1;
 		uint8_t tempHigh = ID >> 8;
@@ -239,6 +200,9 @@ uint8_t AddUser1ID(uint8_t ID){
 		}else if(BufRead[4]==ACK_GO_OUT){
 				USART3SendString("\r\n ADD1 go out");
 				return ACK_GO_OUT;
+		}else{
+			USART3SendString("\r\n ADD1 unknown error");
+			return ACK_FAIL;
 		}
 		
 }
@@ -295,6 +259,9 @@ uint8_t AddUser3ID(uint8_t ID){
 		}else if(BufRead[4]==ACK_TIMEOUT){
 				USART3SendString("\r\n ADD3 timeout");
 				return ACK_TIMEOUT;
+		}else{
+			USART3SendString("\r\n ADD3 unknown error");
+			return ACK_FAIL;
 		}
 		
 }
@@ -348,6 +315,9 @@ uint8_t AddUser2ID(uint8_t ID){
 		}else if(BufRead[4]==ACK_TIMEOUT){
 				USART3SendString("\r\n ADD2 timeout");
 				return ACK_TIMEOUT;
+		}else{
+			USART3SendString("\r\n ADD2 unknown error");
+			return ACK_FAIL;
 		}
 		
 }
@@ -356,6 +326,8 @@ uint8_t AddUser2ID(uint8_t ID){
 uint8_t AddUserID(uint8_t ID){
 	
 	uint8_t temp;
+	
+	ZeroDMABufRX();
 	
 	temp = AddUser1ID(ID);
 	if(temp == ACK_SUCCESS){
@@ -396,6 +368,8 @@ uint8_t DeleteAllUsers(void){
 		
 		uint8_t CheckSum=0;
 	
+		ZeroDMABufRX();
+	
 		bufferTX[0]=CMD_HEAD;
 		bufferTX[1]=CMD_DEL_ALL;
 		bufferTX[2]=0;
@@ -432,6 +406,8 @@ uint8_t DeleteUser(uint16_t ID){
 	
 		uint8_t CheckSum=0;
 		
+		ZeroDMABufRX();
+	
 		uint8_t highID = ID >> 8;
 		uint8_t lowID = (ID & 0xFF);
 		
@@ -466,7 +442,9 @@ uint16_t MatchFingerprint(void){
 
 		uint8_t CheckSum=0;
 		
-		uint16_t match;
+		ZeroDMABufRX();
+	
+		//uint16_t match;
 		char bufff[10];
 	
 		bufferTX[0]=CMD_HEAD;
@@ -494,6 +472,9 @@ uint16_t MatchFingerprint(void){
 		}else if(BufRead[4] == ACK_TIMEOUT){
 			USART3SendString("\r\n TIMEOUT");
 			return ACK_TIMEOUT;
+		}else if(BufRead[4] == ACK_GO_OUT){
+			USART3SendString("\r\n FINGER OUT");
+			return ACK_GO_OUT;
 		}else if(bufferTX[1] == BufRead[1] && BufRead[4]<=3){
 				match = (BufRead[2] << 8) + BufRead[3];
 				sprintf(bufff, "%d", match);
@@ -502,20 +483,92 @@ uint16_t MatchFingerprint(void){
 				sprintf(bufff, "%d", BufRead[4]);
 				USART3SendString("\r\n Matched permissionn: ");
 				USART3SendString(bufff);
-			return match;
+			return ACK_SUCCESS;
+		}else{
+			USART3SendString("\r\n MATCH unknown error");
+			return ACK_FAIL;
 		}
 
 }
-	
-uint8_t AutoMatchFingerprint(void){
-	
-	
 
+void ConfAutoMode(void){
+
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOGEN;
+	
+	GPIOG -> MODER &= ~GPIO_MODER_MODER0;
+	GPIOG -> MODER |= GPIO_MODER_MODER0_0;
+	GPIOG -> OTYPER &= ~GPIO_OTYPER_OT0;
+	GPIOG -> OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR0;
+	
+	
+	GPIOG -> MODER &= ~GPIO_MODER_MODER1;
+	GPIOG -> PUPDR &= ~GPIO_PUPDR_PUPD1;
+	GPIOG -> OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR1;
+	GPIOG -> OSPEEDR |= GPIO_OSPEEDER_OSPEEDR1_1;
+	
 }
 
+void AutoMode(void){
+	
+	ZeroDMABufRX();
+	
+	if(SleepFlag){
+		GPIOG -> ODR &= ~GPIO_ODR_OD0;
+		LedOnOff(red, LedOn);
+		delay_ms(300);
+	}
+	
+	while(SleepFlag){
+		if((GPIOG -> IDR & GPIO_IDR_ID1) != RESET){
+			GPIOG -> ODR |= GPIO_ODR_OD0;
+			LedOnOff(blue, LedOn);
+			delay_ms(500);
+			MatchFingerprint();
+			LedOnOff(blue, LedOff);
+			delay_ms(300);
+			GPIOG -> ODR &= ~GPIO_ODR_OD0;
+			delay_ms(300);
+			if(DMABufRX[0]==7){
+				SleepFlag=false;
+				GPIOG -> ODR |= GPIO_ODR_OD0;
+				LedOnOff(red, LedOff);
+				delay_ms(300);
+			}
+		}
+	}
+}
 
 void PCCommandAnalysis(void){
-	
+	switch(DMABufRX[0]){
+		case 0:
+			break;
+		case 1:
+			UserCount = GetUserCount();
+		break;
+		case 2:
+			UserCount = GetUserCount();
+			AddUserID(UserCount+1);
+		break;
+		case 4:
+			DeleteAllUsers();
+		break;
+		case 5:
+			delay_ms(200);
+			uint16_t ID = DMABufRX[0];
+			DeleteUser(ID);
+		break;
+		case 6:
+			MatchFingerprint();
+		break;
+		case 7:
+			SleepFlag = true;
+			AutoMode();
+		break;
+		default:
+			USART3SendString("No such command \r\n");
+		break;
+	}
+
 }
 
 
