@@ -15,26 +15,31 @@ extern volatile uint8_t BufWrite[100];
 
 volatile uint16_t match;
 volatile uint16_t UserCount;
+volatile uint16_t UserTrack;
 volatile bool SleepFlag;
 
+/***************************************************************************
+*  	Calculation of received data's checksum
+****************************************************************************/
 uint8_t CountRXCheckSum(void){
-		char buf[2];
-		uint8_t RXCheckSum = 0;
+		
+	uint8_t RXCheckSum = 0;
 	
-		for(int i = 1; i<7; i++){
-			RXCheckSum ^= BufRead[i];
-			USART3SendString("\r\n kolejna checksuma: ");
-			sprintf(buf, "%d", BufRead[i]);
-			USART3SendString(buf);
-		}
+	for(int i = 1; i<7; i++){
+		RXCheckSum ^= BufRead[i];		
+	}
 	return RXCheckSum;
 }	
 
+/***************************************************************************
+*  	Getting User Count from sensor memory
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 uint16_t GetUserCount(){
 	
 		uint8_t temp;
 		uint8_t CheckSum=0;
-	
+		uint8_t resp[5];
 		ZeroDMABufRX();
 	
 		char buff[5];
@@ -44,6 +49,7 @@ uint16_t GetUserCount(){
 		bufferTX[3]=0;
 		bufferTX[4]=0;
 		bufferTX[5]=0;
+	
 		for(int i = 1; i<6; i++){
 			CheckSum ^= bufferTX[i];
 		}
@@ -60,8 +66,15 @@ uint16_t GetUserCount(){
 		delay_ms2(200);
 		
 		CheckSum = CountRXCheckSum();
+		resp[0]=cmdHead;
+		
 		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
+				
+				resp[1]=cmdGetUserCount;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 		if(BufRead[4] == ACK_SUCCESS && bufferTX[1] == BufRead[1]){
@@ -69,91 +82,40 @@ uint16_t GetUserCount(){
 			lowCountNumber = BufRead[3];
 			UserCount = lowCountNumber + (highCountNumber << 8);
 			
-			sprintf(buff, "%d", UserCount);
-			USART3SendString("\r\n SUCC ID: ");
-			USART3SendString(buff);
+			resp[1]=cmdGetUserCount;
+			resp[2]=ackSuccess;
+			resp[3]=lowCountNumber;
+			resp[4]=QtCheckSum(resp,3);
+			
+			USART3SendDMAUINT(resp, 5);
 			
 			return UserCount;
 			
 		}else{
-			USART3SendString("tu jestem\r\n");
-			sprintf(buff, "%d", BufRead[4]);
-			USART3SendString(buff);
-			USART3SendString("\r\n");
-			sprintf(buff, "%d", BufRead[1]);
-			USART3SendString(buff);
-			USART3SendString("\r\n");
+			
+			resp[1]=cmdGetUserCount;
+			resp[2]=ackFail;
+			resp[3]=QtCheckSum(resp,2);
+			resp[4]=0;
+			USART3SendDMAUINT(resp, 5);
 			return 0xFF;
 			
 		}
 		
-	}
-	
-//to be redesigned
-uint8_t AddUser1(void){
-
-		uint16_t temp;
-		uint8_t CheckSum=0;
-	
-		temp = GetUserCount();
-		temp = temp+1;
-		uint8_t tempHigh = temp >> 8;
-		uint8_t tempLow = temp-(256*tempHigh);
-	
-		bufferTX[0]=CMD_HEAD;
-		bufferTX[1]=CMD_ADD_1;
-		bufferTX[2]=tempHigh;
-		bufferTX[3]=tempLow;
-		bufferTX[4]=1;
-		bufferTX[5]=0;
-		for(int i = 1; i<6; i++){
-			CheckSum ^= bufferTX[i];
-		}
-		bufferTX[6]=CheckSum;
-		bufferTX[7]=CMD_TAIL;
-		
-		USART2SendDMAUINT(bufferTX, 8);
-	
-		delay_ms2(2000);
-		
-		CheckSum = CountRXCheckSum();
-		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
-				return ACK_FAIL;
-		}
-		
-		if(BufRead[4]==ACK_SUCCESS && bufferTX[1] == BufRead[1]){
-				USART3SendString("\r\n ADD1 succesful");
-				return ACK_SUCCESS;
-		}else if(BufRead[4]==ACK_FAIL){
-				USART3SendString("\r\n ADD1 FAIL");
-				return ACK_FAIL;
-		}else if(BufRead[4]==ACK_FULL){
-				USART3SendString("\r\n ADD1 FULL");
-				return ACK_FULL;
-		}else if(BufRead[4]==ACK_USER_OCCUPIED){
-				USART3SendString("\r\n ADD1 user occupied");
-				return ACK_USER_OCCUPIED;
-		}else if(BufRead[4]==ACK_FINGER_OCCUPIED){
-				USART3SendString("\r\n ADD1 finger occupied");
-				return ACK_FINGER_OCCUPIED;
-		}else if(BufRead[4]==ACK_TIMEOUT){
-				USART3SendString("\r\n ADD1 timeout");
-				return ACK_TIMEOUT;
-		}
-		
-	
-	
 }
+	
+/***************************************************************************
+*  	Adding user part 1 
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 
 uint8_t AddUser1ID(uint8_t ID){
 
-		//uint16_t temp;
+		
 		uint8_t CheckSum=0;
-	
+		uint8_t resp[5];
 		ZeroDMABufRX();
-		//temp = GetUserCount();
-		//temp = temp+1;
+		
 		uint8_t tempHigh = ID >> 8;
 		uint8_t tempLow = ID-(256*tempHigh);
 	
@@ -163,9 +125,11 @@ uint8_t AddUser1ID(uint8_t ID){
 		bufferTX[3]=tempLow;
 		bufferTX[4]=1;
 		bufferTX[5]=0;
+	
 		for(int i = 1; i<6; i++){
 			CheckSum ^= bufferTX[i];
 		}
+		
 		bufferTX[6]=CheckSum;
 		bufferTX[7]=CMD_TAIL;
 		
@@ -174,48 +138,96 @@ uint8_t AddUser1ID(uint8_t ID){
 		delay_ms2(4000);
 		
 		CheckSum = CountRXCheckSum();
+		
+		resp[0]=cmdHead;
+		
 		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
+				
+				resp[1]=cmdAddUserAutoIncrement;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 		
 		if(BufRead[4]==ACK_SUCCESS && bufferTX[1] == BufRead[1]){
-				USART3SendString("\r\n ADD1 succesful");
+				
+				resp[1]=cmdAddUserAutoIncrement;
+				resp[2]=ackSuccess;
+				resp[3]=QtCheckSum(resp, 2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_SUCCESS;
 		}else if(BufRead[4]==ACK_FAIL){
-				USART3SendString("\r\n ADD1 FAIL");
+				
+				resp[1]=cmdAddUserAutoIncrement;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}else if(BufRead[4]==ACK_FULL){
-				USART3SendString("\r\n ADD1 FULL");
+			
+				resp[1]=cmdAddUserAutoIncrement;
+				resp[2]=ackFull;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FULL;
 		}else if(BufRead[4]==ACK_USER_OCCUPIED){
-				USART3SendString("\r\n ADD1 user occupied");
+				
+				resp[1]=cmdAddUserAutoIncrement;
+				resp[2]=ackUserOccupied;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_USER_OCCUPIED;
 		}else if(BufRead[4]==ACK_FINGER_OCCUPIED){
-				USART3SendString("\r\n ADD1 finger occupied");
+				
+				resp[1]=cmdAddUserAutoIncrement;
+				resp[2]=ackFingerOccupied;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FINGER_OCCUPIED;
 		}else if(BufRead[4]==ACK_TIMEOUT){
-				USART3SendString("\r\n ADD1 timeout");
-				return ACK_TIMEOUT;
+				
+			resp[1]=cmdAddUserAutoIncrement;
+			resp[2]=ackTimeout;
+			resp[3]=QtCheckSum(resp,2);
+			resp[4]=0;
+			USART3SendDMAUINT(resp, 5);
+			return ACK_TIMEOUT;
 		}else if(BufRead[4]==ACK_GO_OUT){
-				USART3SendString("\r\n ADD1 go out");
-				return ACK_GO_OUT;
+				
+			resp[1]=cmdAddUserAutoIncrement;
+			resp[2]=ackGoOut;
+			resp[3]=QtCheckSum(resp,2);
+			resp[4]=0;
+			USART3SendDMAUINT(resp, 5);
+			return ACK_GO_OUT;
 		}else{
-			USART3SendString("\r\n ADD1 unknown error");
+			
+			resp[1]=cmdAddUserAutoIncrement;
+			resp[2]=ackFail;
+			resp[3]=QtCheckSum(resp,2);
+			resp[4]=0;
+			USART3SendDMAUINT(resp, 5);
 			return ACK_FAIL;
 		}
 		
 }
 
-
+/***************************************************************************
+*  	Adding user part 3 
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 uint8_t AddUser3ID(uint8_t ID){
 
-		//uint16_t temp;
 		uint8_t CheckSum=0;
-	
+		uint8_t resp[5];
 		
-		//temp = GetUserCount();
-		//temp = temp+1;
 		uint8_t tempHigh = ID >> 8;
 		uint8_t tempLow = ID-(256*tempHigh);
 	
@@ -236,42 +248,86 @@ uint8_t AddUser3ID(uint8_t ID){
 		delay_ms2(4000);
 		
 		CheckSum = CountRXCheckSum();
+		resp[0]=cmdHead;
 		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
+				
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 		
 		if(BufRead[4]==ACK_SUCCESS && bufferTX[1] == BufRead[1]){
-				USART3SendString("\r\n ADD3 succesful");
+				
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackSuccess;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_SUCCESS;
 		}else if(BufRead[4]==ACK_FAIL){
-				USART3SendString("\r\n ADD3 FAIL");
+				
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}else if(BufRead[4]==ACK_FULL){
-				USART3SendString("\r\n ADD3 FULL");
+			
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackFull;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FULL;
 		}else if(BufRead[4]==ACK_USER_OCCUPIED){
-				USART3SendString("\r\n ADD3 user occupied");
+				
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackUserOccupied;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_USER_OCCUPIED;
 		}else if(BufRead[4]==ACK_FINGER_OCCUPIED){
-				USART3SendString("\r\n ADD3 finger occupied");
+			
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackFingerOccupied;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FINGER_OCCUPIED;
 		}else if(BufRead[4]==ACK_TIMEOUT){
-				USART3SendString("\r\n ADD3 timeout");
+				
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackTimeout;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_TIMEOUT;
 		}else{
-			USART3SendString("\r\n ADD3 unknown error");
-			return ACK_FAIL;
+			
+				resp[1]=cmdAddUserAutoIncrement3;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
+				return ACK_FAIL;
 		}
 		
 }
+
+/***************************************************************************
+*  	Adding user part 2 
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 uint8_t AddUser2ID(uint8_t ID){
 
-		//uint16_t temp;
 		uint8_t CheckSum=0;
-	
-		//temp = GetUserCount();
-		//temp = temp+1;
+		uint8_t resp[5];
+		
 		uint8_t tempHigh = ID >> 8;
 		uint8_t tempLow = ID-(256*tempHigh);
 	
@@ -291,37 +347,81 @@ uint8_t AddUser2ID(uint8_t ID){
 	
 		delay_ms2(4000);
 		
+		resp[0]=cmdHead;
 		CheckSum = CountRXCheckSum();
 		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 		
 		if(BufRead[4]==ACK_SUCCESS && bufferTX[1] == BufRead[1]){
-				USART3SendString("\r\n ADD2 succesful");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackSuccess;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_SUCCESS;
 		}else if(BufRead[4]==ACK_FAIL){
-				USART3SendString("\r\n ADD2 FAIL");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}else if(BufRead[4]==ACK_FULL){
-				USART3SendString("\r\n ADD2 FULL");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackFull;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FULL;
 		}else if(BufRead[4]==ACK_USER_OCCUPIED){
-				USART3SendString("\r\n ADD2 user occupied");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackUserOccupied;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_USER_OCCUPIED;
 		}else if(BufRead[4]==ACK_FINGER_OCCUPIED){
-				USART3SendString("\r\n ADD2 finger occupied");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackFingerOccupied;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FINGER_OCCUPIED;
 		}else if(BufRead[4]==ACK_TIMEOUT){
-				USART3SendString("\r\n ADD2 timeout");
+				
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackTimeout;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_TIMEOUT;
 		}else{
-			USART3SendString("\r\n ADD2 unknown error");
+			
+				resp[1]=cmdAddUserAutoIncrement2;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 			return ACK_FAIL;
 		}
 		
 }
 
+/***************************************************************************
+*  	Adding user - complete function	
+****************************************************************************/
 
 uint8_t AddUserID(uint8_t ID){
 	
@@ -331,43 +431,32 @@ uint8_t AddUserID(uint8_t ID){
 	
 	temp = AddUser1ID(ID);
 	if(temp == ACK_SUCCESS){
-			USART3SendString("\r\n ADD1 succ");
 			temp = AddUser2ID(ID);
 			if(temp == ACK_SUCCESS){
-					USART3SendString("\r\n ADD2 succ");
 					temp = AddUser3ID(ID);
 					if(temp == ACK_SUCCESS){
-							USART3SendString("\r\n ADD3 succ");
+							UserCount++;
 					}else{
-							char errbuf[10];
-							sprintf(errbuf, " \t %d", BufRead[4]);
-							USART3SendString("\r\n ADD3 error code");
-							USART3SendString(errbuf);
 							return BufRead[4];
 					}
 			}else{
-					char errbuf[10];
-					sprintf(errbuf, " \t %d", BufRead[4]);
-					USART3SendString("\r\n ADD2 error code");
-					USART3SendString(errbuf);
 					return BufRead[4];
 			}
 	}else{
-			char errbuf[10];
-			sprintf(errbuf, " \t %d", BufRead[4]);
-			USART3SendString("\r\n ADD1 error code");
-			USART3SendString(errbuf);
 			return BufRead[4];
 	}
 
 	
 }
 
-
+/***************************************************************************
+*  	Deleting all users
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 uint8_t DeleteAllUsers(void){
 		
 		uint8_t CheckSum=0;
-	
+		uint8_t resp[5];
 		ZeroDMABufRX();
 	
 		bufferTX[0]=CMD_HEAD;
@@ -386,28 +475,49 @@ uint8_t DeleteAllUsers(void){
 		delay_ms2(500);
 		
 		CheckSum = CountRXCheckSum();
+		resp[0]=cmdHead;
 		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
+			
+				resp[1]=cmdDeleteAllUsers;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 		
 		if(BufRead[4] == ACK_SUCCESS && bufferTX[1] == BufRead[1]){
-				USART3SendString("\r\n DELETE ALL SUCC");
+				
+				resp[1]=cmdDeleteAllUsers;
+				resp[2]=ackSuccess;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
+				UserCount=0;
 				return ACK_SUCCESS;
 		}			
 		else{
-				USART3SendString("\r\n DELETE ALL FAIL");
+				
+				resp[1]=cmdDeleteAllUsers;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 }
 	
+/***************************************************************************
+*  	Deleting single user with ID passed as function argument
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 uint8_t DeleteUser(uint16_t ID){
-		
 	
 		uint8_t CheckSum=0;
 		
 		ZeroDMABufRX();
 	
+		uint8_t resp[5];
 		uint8_t highID = ID >> 8;
 		uint8_t lowID = (ID & 0xFF);
 		
@@ -426,26 +536,50 @@ uint8_t DeleteUser(uint16_t ID){
 		USART2SendDMAUINT(bufferTX, 8);
 	
 		delay_ms2(400);
+		CheckSum = CountRXCheckSum();
+		resp[0]=cmdHead;
 		
-	if(BufRead[4] == ACK_SUCCESS && bufferTX[1] == BufRead[1]){
-				USART3SendString("\r\n DELETE ID SUCC");
+		if(CheckSum != 0){
+				
+				resp[1]=cmdGetUserCount;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
+				return ACK_FAIL;
+		}
+		
+		if(BufRead[4] == ACK_SUCCESS && bufferTX[1] == BufRead[1]){
+				
+				resp[1]=cmdDeleteUserID;
+				resp[2]=ackSuccess;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_SUCCESS;
 		}			
 		else{
-				USART3SendString("\r\n DELETE ID FAIL");
+				
+				resp[1]=cmdDeleteUserID;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}
 		
 }
 
+
+/***************************************************************************
+*  	Matching fingerprint 
+*	Sending 8byte data frame and waiting for response	
+****************************************************************************/
 uint16_t MatchFingerprint(void){
 
 		uint8_t CheckSum=0;
-		
+		uint8_t resp[5];
 		ZeroDMABufRX();
-	
-		//uint16_t match;
-		char bufff[10];
 	
 		bufferTX[0]=CMD_HEAD;
 		bufferTX[1]=CMD_MATCH;
@@ -463,109 +597,158 @@ uint16_t MatchFingerprint(void){
 		delay_ms2(1000);
 		
 		CheckSum = CountRXCheckSum();
+		resp[0]=cmdHead;
 		if(CheckSum != 0){
-				USART3SendString("\r\n CHECKSUM FAULT");
+				
+				resp[1]=cmdMatchFingerprint;
+				resp[2]=ackCheckSumFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_FAIL;
 		}else if(BufRead[4] == ACK_NO_USER){
-				USART3SendString("\r\n MATCH NO USER");
+				
+				resp[1]=cmdMatchFingerprint;
+				resp[2]=ackNoUser;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 				return ACK_NO_USER;
 		}else if(BufRead[4] == ACK_TIMEOUT){
-			USART3SendString("\r\n TIMEOUT");
+			
+				resp[1]=cmdMatchFingerprint;
+				resp[2]=ackTimeout;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 			return ACK_TIMEOUT;
 		}else if(BufRead[4] == ACK_GO_OUT){
-			USART3SendString("\r\n FINGER OUT");
+			
+				resp[1]=cmdMatchFingerprint;
+				resp[2]=ackGoOut;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 			return ACK_GO_OUT;
 		}else if(bufferTX[1] == BufRead[1] && BufRead[4]<=3){
-				match = (BufRead[2] << 8) + BufRead[3];
-				sprintf(bufff, "%d", match);
-				USART3SendString("\r\n Matched ID: ");
-				USART3SendString(bufff);
-				sprintf(bufff, "%d", BufRead[4]);
-				USART3SendString("\r\n Matched permissionn: ");
-				USART3SendString(bufff);
+				
+				resp[1]=cmdMatchFingerprint;
+				resp[2]=ackSuccess;
+				resp[3]=BufRead[3];
+				resp[4]=QtCheckSum(resp,3);
+				USART3SendDMAUINT(resp, 5);
 			return ACK_SUCCESS;
 		}else{
-			USART3SendString("\r\n MATCH unknown error");
+			
+				resp[1]=cmdMatchFingerprint;
+				resp[2]=ackFail;
+				resp[3]=QtCheckSum(resp,2);
+				resp[4]=0;
+				USART3SendDMAUINT(resp, 5);
 			return ACK_FAIL;
 		}
 
 }
 
-void ConfAutoMode(void){
+/***************************************************************************
+*  	Calculation checksum helpful for communication with Qt app 
+****************************************************************************/
+uint8_t QtCheckSum(uint8_t* buf, uint8_t length){
 
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOGEN;
-	
-	GPIOG -> MODER &= ~GPIO_MODER_MODER0;
-	GPIOG -> MODER |= GPIO_MODER_MODER0_0;
-	GPIOG -> OTYPER &= ~GPIO_OTYPER_OT0;
-	GPIOG -> OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR0;
-	
-	
-	GPIOG -> MODER &= ~GPIO_MODER_MODER1;
-	GPIOG -> PUPDR &= ~GPIO_PUPDR_PUPD1;
-	GPIOG -> OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR1;
-	GPIOG -> OSPEEDR |= GPIO_OSPEEDER_OSPEEDR1_1;
-	
+		uint8_t QtSum=0;
+		for(int i=0; i<(length+1); i++){
+				QtSum ^= buf[i];
+		}
+		return QtSum;
 }
-
+/***************************************************************************
+*  	Enabling auto matching mode 
+****************************************************************************/
 void AutoMode(void){
+	
+	uint8_t resp[5];
 	
 	ZeroDMABufRX();
 	
-	if(SleepFlag){
-		GPIOG -> ODR &= ~GPIO_ODR_OD0;
-		LedOnOff(red, LedOn);
-		delay_ms(300);
-	}
+	resp[0]=cmdHead;
+	resp[1]=cmdEnableAutoMatch;
+	resp[2]=ackSuccess;
+	resp[3]=QtCheckSum(resp, 2);
+	resp[4]=0;
+	
+	USART3SendDMAUINT(resp, 5);
 	
 	while(SleepFlag){
-		if((GPIOG -> IDR & GPIO_IDR_ID1) != RESET){
-			GPIOG -> ODR |= GPIO_ODR_OD0;
-			LedOnOff(blue, LedOn);
-			delay_ms(500);
+		
+		LedOnOff(red, LedOn);
+		
+		if(B1Read()){
+		
 			MatchFingerprint();
-			LedOnOff(blue, LedOff);
-			delay_ms(300);
-			GPIOG -> ODR &= ~GPIO_ODR_OD0;
-			delay_ms(300);
-			if(DMABufRX[0]==7){
-				SleepFlag=false;
-				GPIOG -> ODR |= GPIO_ODR_OD0;
-				LedOnOff(red, LedOff);
-				delay_ms(300);
-			}
+		
 		}
+		
+		if(DMABufRX[0]==8){
+		
+			resp[0]=cmdHead;
+			resp[1]=cmdDisableAutoMatch;
+			resp[2]=ackSuccess;
+			resp[3]=QtCheckSum(resp, 2);
+			resp[4]=0;
+			
+			LedOnOff(red, LedOff);
+			
+			USART3SendDMAUINT(resp, 5);
+			
+			break;
+			
+		}
+		
 	}
+	
+	
+	
 }
 
+
+/***************************************************************************
+*  	Analysis of the command sent from Qt app
+****************************************************************************/
+
 void PCCommandAnalysis(void){
+	uint16_t ID;
 	switch(DMABufRX[0]){
 		case 0:
+			ZeroDMABufRX();
 			break;
-		case 1:
+		case cmdGetUserCount:
 			UserCount = GetUserCount();
 		break;
-		case 2:
-			UserCount = GetUserCount();
-			AddUserID(UserCount+1);
+		case cmdAddUserAutoIncrement:
+			delay_ms(100);
+			ID = DMABufRX[1];
+			AddUserID(ID);
 		break;
-		case 4:
+		case cmdDeleteAllUsers:
 			DeleteAllUsers();
 		break;
-		case 5:
-			delay_ms(200);
-			uint16_t ID = DMABufRX[0];
+		case cmdDeleteUserID:
+			delay_ms(100);
+			ID = DMABufRX[1];
 			DeleteUser(ID);
 		break;
-		case 6:
+		case cmdMatchFingerprint:
 			MatchFingerprint();
 		break;
-		case 7:
+		case cmdEnableAutoMatch:
 			SleepFlag = true;
 			AutoMode();
 		break;
+		case cmdDisableAutoMatch:
+			SleepFlag = false;
+		break;
 		default:
-			USART3SendString("No such command \r\n");
+			ZeroDMABufRX();
 		break;
 	}
 
