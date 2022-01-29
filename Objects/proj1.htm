@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\proj1.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\proj1.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sun Jan 16 19:54:09 2022
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Fri Jan 28 22:37:49 2022
 <BR><P>
 <H3>Maximum Stack Usage =         64 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -672,7 +672,7 @@ Global Symbols
 <LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AddUser1ID
 <LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ZeroDMABufRX
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
 <P><STRONG><a name="[84]"></a>AutoMode</STRONG> (Thumb, 144 bytes, Stack size 16 bytes, sensor.o(i.AutoMode))
@@ -685,7 +685,7 @@ Global Symbols
 <LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LedOnOff
 <LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;B1Read
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
 <P><STRONG><a name="[92]"></a>B1Conf</STRONG> (Thumb, 26 bytes, Stack size 0 bytes, functions.o(i.B1Conf))
@@ -722,7 +722,7 @@ Global Symbols
 <LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3SendDMAUINT
 <LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART2SendDMAUINT
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
 <P><STRONG><a name="[89]"></a>DeleteUser</STRONG> (Thumb, 240 bytes, Stack size 32 bytes, sensor.o(i.DeleteUser))
@@ -735,7 +735,7 @@ Global Symbols
 <LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3SendDMAUINT
 <LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART2SendDMAUINT
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
 <P><STRONG><a name="[8a]"></a>GetUserCount</STRONG> (Thumb, 240 bytes, Stack size 32 bytes, sensor.o(i.GetUserCount))
@@ -748,7 +748,7 @@ Global Symbols
 <LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3SendDMAUINT
 <LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART2SendDMAUINT
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
 <P><STRONG><a name="[93]"></a>LedConf</STRONG> (Thumb, 76 bytes, Stack size 0 bytes, functions.o(i.LedConf))
@@ -756,24 +756,27 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[85]"></a>LedOnOff</STRONG> (Thumb, 172 bytes, Stack size 0 bytes, functions.o(i.LedOnOff))
-<BR><BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AutoMode
+<BR><BR>[Called By]<UL><LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MatchFingerprint
+<LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AutoMode
 </UL>
 
-<P><STRONG><a name="[87]"></a>MatchFingerprint</STRONG> (Thumb, 382 bytes, Stack size 16 bytes, sensor.o(i.MatchFingerprint))
+<P><STRONG><a name="[87]"></a>MatchFingerprint</STRONG> (Thumb, 526 bytes, Stack size 16 bytes, sensor.o(i.MatchFingerprint))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = MatchFingerprint &rArr; QtCheckSum
 </UL>
 <BR>[Calls]<UL><LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;QtCheckSum
 <LI><a href="#[7e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CountRXCheckSum
 <LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_ms2
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_ms
 <LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ZeroDMABufRX
 <LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3SendDMAUINT
 <LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART2SendDMAUINT
+<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LedOnOff
 </UL>
 <BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AutoMode
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
-<P><STRONG><a name="[8b]"></a>PCCommandAnalysis</STRONG> (Thumb, 118 bytes, Stack size 8 bytes, sensor.o(i.PCCommandAnalysis))
+<P><STRONG><a name="[8c]"></a>PCCommandAnalysis</STRONG> (Thumb, 118 bytes, Stack size 8 bytes, sensor.o(i.PCCommandAnalysis))
 <BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = PCCommandAnalysis &rArr; AddUserID &rArr; AddUser3ID &rArr; QtCheckSum
 </UL>
 <BR>[Calls]<UL><LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MatchFingerprint
@@ -782,7 +785,7 @@ Global Symbols
 <LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DeleteAllUsers
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AutoMode
 <LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AddUserID
-<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_ms
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_ms
 <LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ZeroDMABufRX
 </UL>
 <BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
@@ -878,11 +881,12 @@ Global Symbols
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AutoMode
 <LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AddUserID
 <LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AddUser1ID
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
-<P><STRONG><a name="[8c]"></a>delay_ms</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, functions.o(i.delay_ms))
-<BR><BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<P><STRONG><a name="[8b]"></a>delay_ms</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, functions.o(i.delay_ms))
+<BR><BR>[Called By]<UL><LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MatchFingerprint
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 </UL>
 
 <P><STRONG><a name="[7d]"></a>delay_ms2</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, functions.o(i.delay_ms2))
@@ -900,7 +904,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3ConfDMA
 <LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART2ConfDMA
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCCommandAnalysis
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LedConf
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;B1Conf
 </UL>

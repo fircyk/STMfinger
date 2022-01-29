@@ -28,7 +28,6 @@ int main(void){
 	
 	SleepFlag = false;
 	
-	bool state = false;
 	
 	while(1){
 		

@@ -605,6 +605,9 @@ uint16_t MatchFingerprint(void){
 				resp[3]=QtCheckSum(resp,2);
 				resp[4]=0;
 				USART3SendDMAUINT(resp, 5);
+				LedOnOff(red, LedOn);
+				delay_ms(300);
+				LedOnOff(red, LedOff);
 				return ACK_FAIL;
 		}else if(BufRead[4] == ACK_NO_USER){
 				
@@ -613,6 +616,9 @@ uint16_t MatchFingerprint(void){
 				resp[3]=QtCheckSum(resp,2);
 				resp[4]=0;
 				USART3SendDMAUINT(resp, 5);
+				LedOnOff(red, LedOn);
+				delay_ms(300);
+				LedOnOff(red, LedOff);
 				return ACK_NO_USER;
 		}else if(BufRead[4] == ACK_TIMEOUT){
 			
@@ -621,7 +627,10 @@ uint16_t MatchFingerprint(void){
 				resp[3]=QtCheckSum(resp,2);
 				resp[4]=0;
 				USART3SendDMAUINT(resp, 5);
-			return ACK_TIMEOUT;
+				LedOnOff(red, LedOn);
+				delay_ms(300);
+				LedOnOff(red, LedOff);
+				return ACK_TIMEOUT;
 		}else if(BufRead[4] == ACK_GO_OUT){
 			
 				resp[1]=cmdMatchFingerprint;
@@ -629,7 +638,10 @@ uint16_t MatchFingerprint(void){
 				resp[3]=QtCheckSum(resp,2);
 				resp[4]=0;
 				USART3SendDMAUINT(resp, 5);
-			return ACK_GO_OUT;
+				LedOnOff(red, LedOn);
+				delay_ms(300);
+				LedOnOff(red, LedOff);
+				return ACK_GO_OUT;
 		}else if(bufferTX[1] == BufRead[1] && BufRead[4]<=3){
 				
 				resp[1]=cmdMatchFingerprint;
@@ -637,7 +649,10 @@ uint16_t MatchFingerprint(void){
 				resp[3]=BufRead[3];
 				resp[4]=QtCheckSum(resp,3);
 				USART3SendDMAUINT(resp, 5);
-			return ACK_SUCCESS;
+				LedOnOff(green, LedOn);
+				delay_ms(300);
+				LedOnOff(green, LedOff);
+				return ACK_SUCCESS;
 		}else{
 			
 				resp[1]=cmdMatchFingerprint;
@@ -645,7 +660,10 @@ uint16_t MatchFingerprint(void){
 				resp[3]=QtCheckSum(resp,2);
 				resp[4]=0;
 				USART3SendDMAUINT(resp, 5);
-			return ACK_FAIL;
+				LedOnOff(red, LedOn);
+				delay_ms(300);
+				LedOnOff(red, LedOff);
+				return ACK_FAIL;
 		}
 
 }
@@ -680,7 +698,7 @@ void AutoMode(void){
 	
 	while(SleepFlag){
 		
-		LedOnOff(red, LedOn);
+		LedOnOff(blue, LedOn);
 		
 		if(B1Read()){
 		
@@ -696,7 +714,7 @@ void AutoMode(void){
 			resp[3]=QtCheckSum(resp, 2);
 			resp[4]=0;
 			
-			LedOnOff(red, LedOff);
+			LedOnOff(blue, LedOff);
 			
 			USART3SendDMAUINT(resp, 5);
 			

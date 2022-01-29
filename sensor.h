@@ -18,7 +18,7 @@
 #define ACK_USER_OCCUPIED   	0x06
 #define ACK_FINGER_OCCUPIED 	0x07
 #define ACK_TIMEOUT       		0x08
-#define ACK_GO_OUT	  			0x0F		// The center of the fingerprint is out of alignment with sensor
+#define ACK_GO_OUT	  			0x0F		
 
 //User information definition
 #define ACK_ALL_USER       		0x00
@@ -26,7 +26,7 @@
 #define ACK_NORMAL_USER 	  	0x02
 #define ACK_MASTER_USER    		0x03
 
-#define USER_MAX_CNT	   	 	 255	// Maximum fingerprint number
+#define USER_MAX_CNT	   	 	 255	
 
 
 // Command definition
